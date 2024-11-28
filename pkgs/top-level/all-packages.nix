@@ -1454,38 +1454,32 @@ with pkgs;
 
   ### APPLICATIONS/EMULATORS/RETROARCH
 
-  retroarchBare = qt5.callPackage ../applications/emulators/retroarch { };
+  libretro = recurseIntoAttrs (callPackage ../applications/emulators/libretro { });
 
-  retroarchFull = retroarch.override {
-    cores = builtins.filter
-      # Remove cores not supported on platform
-      (c: c ? libretroCore && (lib.meta.availableOn stdenv.hostPlatform c))
-      (builtins.attrValues libretro);
-  };
+  retroarch = wrapRetroArch { };
 
-  wrapRetroArch = { retroarch, settings ? {} }:
-    callPackage ../applications/emulators/retroarch/wrapper.nix
-      { inherit retroarch settings; };
+  # includes only cores for platform with free licenses
+  retroarch-free = retroarch.withCores (
+    cores:
+      lib.filter
+        (c:
+          (c ? libretroCore)
+          && (lib.meta.availableOn stdenv.hostPlatform c)
+          && (!c.meta.unfree))
+        (lib.attrValues cores)
+  );
 
-  retroarch = wrapRetroArch {
-    retroarch = retroarchBare;
-    settings = {
-      assets_directory = "${retroarch-assets}/share/retroarch/assets";
-      joypad_autoconfig_dir = "${retroarch-joypad-autoconfig}/share/libretro/autoconfig";
-      libretro_info_path = "${libretro-core-info}/share/retroarch/cores";
-    };
-  };
+  # includes all cores for platform (including ones with non-free licenses)
+  retroarch-full = retroarch.withCores (
+    cores:
+      lib.filter
+        (c:
+          (c ? libretroCore)
+          && (lib.meta.availableOn stdenv.hostPlatform c))
+        (lib.attrValues cores)
+  );
 
-  retroarch-assets = callPackage ../applications/emulators/retroarch/retroarch-assets.nix { };
-
-  retroarch-joypad-autoconfig = callPackage ../applications/emulators/retroarch/retroarch-joypad-autoconfig.nix { };
-
-  libretro = recurseIntoAttrs (callPackage ../applications/emulators/retroarch/cores.nix { });
-
-  libretro-core-info = callPackage ../applications/emulators/retroarch/libretro-core-info.nix { };
-
-  kodi-retroarch-advanced-launchers =
-    callPackage ../applications/emulators/retroarch/kodi-advanced-launchers.nix { };
+  wrapRetroArch = retroarch-bare.wrapper;
 
   # Aliases kept here because they are easier to use
   x16-emulator = x16.emulator;
@@ -1616,7 +1610,6 @@ with pkgs;
   android-tools = lowPrio (darwin.apple_sdk_11_0.callPackage ../tools/misc/android-tools { });
 
   angie = callPackage ../servers/http/angie {
-    zlib = zlib-ng.override { withZlibCompat = true; };
     withPerl = false;
     # We don't use `with` statement here on purpose!
     # See https://github.com/NixOS/nixpkgs/pull/10474#discussion_r42369334
@@ -1624,7 +1617,6 @@ with pkgs;
   };
 
   angieQuic = callPackage ../servers/http/angie {
-    zlib = zlib-ng.override { withZlibCompat = true; };
     withPerl = false;
     withQuic = true;
     # We don't use `with` statement here on purpose!
@@ -1907,8 +1899,6 @@ with pkgs;
 
   gopass-hibp = callPackage ../tools/security/gopass/hibp.nix { };
 
-  gopass-jsonapi = callPackage ../tools/security/gopass/jsonapi.nix { };
-
   git-credential-gopass = callPackage ../tools/security/gopass/git-credential.nix { };
 
   gopass-summon-provider = callPackage ../tools/security/gopass/summon.nix { };
@@ -2039,8 +2029,6 @@ with pkgs;
 
   biliass = with python3.pkgs; toPythonApplication biliass;
 
-  binwalk = with python3Packages; toPythonApplication binwalk;
-
   birdtray = libsForQt5.callPackage ../applications/misc/birdtray { };
 
   charles = charles4;
@@ -2055,7 +2043,7 @@ with pkgs;
 
   tensor = libsForQt5.callPackage ../applications/networking/instant-messengers/tensor { };
 
-  libtensorflow = python3.pkgs.tensorflow.libtensorflow;
+  libtensorflow = python3.pkgs.tensorflow-build.libtensorflow;
 
   libtorch-bin = callPackage ../development/libraries/science/math/libtorch/bin.nix { };
 
@@ -3047,10 +3035,6 @@ with pkgs;
     inherit (darwin.apple_sdk.frameworks) CoreServices;
   };
 
-  cobang = python311Packages.callPackage ../applications/misc/cobang {
-    gst-plugins-good = gst_all_1.gst-plugins-good.override { gtkSupport = true; };
-  };
-
   cocoapods = callPackage ../development/tools/cocoapods { };
 
   cocoapods-beta = lowPrio (callPackage ../development/tools/cocoapods { beta = true; });
@@ -3824,7 +3808,7 @@ with pkgs;
 
   hpccm = with python3Packages; toPythonApplication hpccm;
 
-  hqplayer-desktop = libsForQt5.callPackage ../applications/audio/hqplayer-desktop { };
+  hqplayer-desktop = qt6Packages.callPackage ../applications/audio/hqplayer-desktop { };
 
   html-proofer = callPackage ../tools/misc/html-proofer { };
 
@@ -3918,7 +3902,6 @@ with pkgs;
   angryipscanner = ipscan;
 
   isl = isl_0_20;
-  isl_0_17 = callPackage ../development/libraries/isl/0.17.1.nix { };
   isl_0_20 = callPackage ../development/libraries/isl/0.20.0.nix { };
   isl_0_24 = callPackage ../development/libraries/isl/0.24.0.nix { };
 
@@ -3967,9 +3950,7 @@ with pkgs;
 
   json-schema-for-humans = with python3Packages; toPythonApplication json-schema-for-humans;
 
-  jsonwatch = callPackage ../tools/misc/jsonwatch {
-    inherit (darwin.apple_sdk.frameworks) Security;
-  };
+  jsonwatch = callPackage ../tools/misc/jsonwatch { };
 
   jupyter = callPackage ../applications/editors/jupyter { };
 
@@ -4495,7 +4476,7 @@ with pkgs;
 
   navilu-font = callPackage ../data/fonts/navilu { stdenv = stdenvNoCC; };
 
-  nerdfonts = callPackage ../data/fonts/nerdfonts { };
+  nerd-fonts = recurseIntoAttrs (callPackage ../data/fonts/nerd-fonts { });
 
   netcdf-mpi = netcdf.override {
     hdf5 = hdf5-mpi.override { usev110Api = true; };
@@ -4655,11 +4636,6 @@ with pkgs;
   ombi = callPackage ../servers/ombi { };
 
   ome_zarr = with python3Packages; toPythonApplication ome-zarr;
-
-  onefetch = callPackage ../tools/misc/onefetch {
-    inherit (darwin) libresolv;
-    inherit (darwin.apple_sdk.frameworks) CoreFoundation Security;
-  };
 
   onlykey = callPackage ../tools/security/onlykey { node_webkit = nwjs; };
 
@@ -6130,8 +6106,6 @@ with pkgs;
       extraBuildInputs = lib.optional stdenv.hostPlatform.isDarwin clang.cc;
     };
 
-  gcc7Stdenv = overrideCC gccStdenv buildPackages.gcc7;
-  gcc8Stdenv = overrideCC gccStdenv buildPackages.gcc8;
   gcc9Stdenv = overrideCC gccStdenv buildPackages.gcc9;
   gcc10Stdenv = overrideCC gccStdenv buildPackages.gcc10;
   gcc11Stdenv = overrideCC gccStdenv buildPackages.gcc11;
@@ -6223,7 +6197,7 @@ with pkgs;
   };
 
   inherit (callPackage ../development/compilers/gcc/all.nix { inherit noSysDirs; })
-    gcc7 gcc8 gcc9 gcc10 gcc11 gcc12 gcc13 gcc14;
+    gcc9 gcc10 gcc11 gcc12 gcc13 gcc14;
 
   gcc_latest = gcc14;
 
@@ -6612,6 +6586,9 @@ with pkgs;
 
   jre17_minimal = callPackage ../development/compilers/openjdk/jre.nix {
     jdk = jdk17;
+  };
+  jre21_minimal = callPackage ../development/compilers/openjdk/jre.nix {
+    jdk = jdk21;
   };
   jre_minimal = callPackage ../development/compilers/openjdk/jre.nix { };
 
@@ -8192,8 +8169,6 @@ with pkgs;
       then targetPackages.stdenv.cc.cc
     else gcc.cc;
 
-  libstdcxx5 = callPackage ../development/libraries/gcc/libstdc++/5.nix { };
-
   libsigrok = callPackage ../development/tools/libsigrok {
     python = python3;
   };
@@ -8876,7 +8851,6 @@ with pkgs;
     else callPackage ../os-specific/linux/bionic-prebuilt { };
 
   inherit (callPackage ../development/libraries/boost { inherit (buildPackages) boost-build; })
-    boost175
     boost177
     boost178
     boost179
@@ -9261,7 +9235,6 @@ with pkgs;
 
   gdcm = callPackage ../development/libraries/gdcm {
     inherit (darwin) DarwinTools;
-    inherit (darwin.apple_sdk.frameworks) ApplicationServices Cocoa;
   };
 
   givaro = callPackage ../development/libraries/givaro { };
@@ -11129,13 +11102,7 @@ with pkgs;
     gtkVersion = "4";
   };
 
-  vtk_9 = libsForQt5.callPackage ../development/libraries/vtk/9.x.nix {
-    inherit (darwin) libobjc;
-    inherit (darwin.apple_sdk.libs) xpc;
-    inherit (darwin.apple_sdk.frameworks) AGL Cocoa CoreServices DiskArbitration
-                                          IOKit CFNetwork Security ApplicationServices
-                                          CoreText IOSurface ImageIO OpenGL GLUT;
-  };
+  vtk_9 = libsForQt5.callPackage ../development/libraries/vtk/9.x.nix { };
 
   vtk_9_withQt5 = vtk_9.override { enableQt = true; };
 
@@ -11860,7 +11827,6 @@ with pkgs;
   nginx = nginxStable;
 
   nginxQuic = callPackage ../servers/http/nginx/quic.nix {
-    zlib = zlib-ng.override { withZlibCompat = true; };
     withPerl = false;
     # We don't use `with` statement here on purpose!
     # See https://github.com/NixOS/nixpkgs/pull/10474#discussion_r42369334
@@ -11870,7 +11836,6 @@ with pkgs;
   };
 
   nginxStable = callPackage ../servers/http/nginx/stable.nix {
-    zlib = zlib-ng.override { withZlibCompat = true; };
     withPerl = false;
     # We don't use `with` statement here on purpose!
     # See https://github.com/NixOS/nixpkgs/pull/10474#discussion_r42369334
@@ -11878,7 +11843,6 @@ with pkgs;
   };
 
   nginxMainline = callPackage ../servers/http/nginx/mainline.nix {
-    zlib = zlib-ng.override { withZlibCompat = true; };
     withKTLS = true;
     withPerl = false;
     # We don't use `with` statement here on purpose!
@@ -11907,6 +11871,7 @@ with pkgs;
   openafs = callPackage ../servers/openafs/1.8 { };
 
   openresty = callPackage ../servers/http/openresty {
+    zlib-ng = zlib;
     withPerl = false;
     modules = [];
   };
@@ -12197,12 +12162,6 @@ with pkgs;
     libtool = cctools;
     protobuf = protobuf_21;
   };
-
-  rippled = callPackage ../servers/rippled {
-    boost = boost177;
-  };
-
-  rippled-validator-keys-tool = callPackage ../servers/rippled/validator-keys-tool.nix { };
 
   rustic = callPackage ../by-name/ru/rustic/package.nix {
     inherit (darwin.apple_sdk.frameworks) Security SystemConfiguration;
@@ -13022,9 +12981,6 @@ with pkgs;
 
   fira-code = callPackage ../data/fonts/fira-code { };
   fira-code-symbols = callPackage ../data/fonts/fira-code/symbols.nix { };
-  fira-code-nerdfont = nerdfonts.override {
-    fonts = [ "FiraCode" ];
-  };
 
   flat-remix-icon-theme = callPackage ../data/icons/flat-remix-icon-theme {
     inherit (plasma5Packages) breeze-icons;
@@ -13074,10 +13030,6 @@ with pkgs;
   inconsolata = callPackage ../data/fonts/inconsolata { };
 
   inconsolata-lgc = callPackage ../data/fonts/inconsolata/lgc.nix { };
-
-  inconsolata-nerdfont = nerdfonts.override {
-    fonts = [ "Inconsolata" ];
-  };
 
   input-fonts = callPackage ../data/fonts/input-fonts { };
 
@@ -13240,10 +13192,6 @@ with pkgs;
     inherit (libsForQt5) breeze-icons;
   };
 
-  terminus-nerdfont = nerdfonts.override {
-    fonts = [ "Terminus" ];
-  };
-
   tex-gyre = callPackages ../data/fonts/tex-gyre { };
 
   tex-gyre-math = callPackages ../data/fonts/tex-gyre-math { };
@@ -13390,11 +13338,7 @@ with pkgs;
     protobuf = protobuf_21;
   };
 
-  audacious = qt6Packages.callPackage ../applications/audio/audacious { };
-  audacious-plugins = qt6Packages.callPackage ../applications/audio/audacious/plugins.nix {
-    # Avoid circular dependency
-    audacious = audacious.override { audacious-plugins = null; };
-  };
+  audacious = audacious-bare.override { withPlugins = true; };
 
   av-98 = callPackage ../applications/networking/browsers/av-98 { };
 
@@ -13421,22 +13365,6 @@ with pkgs;
 
   schismtracker = callPackage ../applications/audio/schismtracker {
     inherit (darwin.apple_sdk.frameworks) Cocoa;
-  };
-
-  libbitcoin = callPackage ../tools/misc/libbitcoin/libbitcoin.nix {
-    boost = boost175; # fatal error: 'boost/interprocess/detail/posix_time_types_wrk.hpp' file not found
-  };
-  libbitcoin-protocol = callPackage ../tools/misc/libbitcoin/libbitcoin-protocol.nix {
-    boost = boost175;
-  };
-  libbitcoin-client   = callPackage ../tools/misc/libbitcoin/libbitcoin-client.nix {
-    boost = boost175;
-  };
-  libbitcoin-network  = callPackage ../tools/misc/libbitcoin/libbitcoin-network.nix {
-    boost = boost175;
-  };
-  libbitcoin-explorer = callPackage ../tools/misc/libbitcoin/libbitcoin-explorer.nix {
-    boost = boost175;
   };
 
   ausweisapp = qt6Packages.callPackage ../applications/misc/ausweisapp { };
@@ -13965,14 +13893,15 @@ with pkgs;
     inherit (darwin.apple_sdk.frameworks) Cocoa;
   };
 
-  greetd = recurseIntoAttrs {
-    dlm = throw "greetd.dlm has been removed as it is broken and abandoned upstream"; #Added 2024-07-15
+  greetd = recurseIntoAttrs ({
     greetd = callPackage ../applications/display-managers/greetd { };
     gtkgreet = callPackage ../applications/display-managers/greetd/gtkgreet.nix { };
     regreet = callPackage ../applications/display-managers/greetd/regreet.nix { };
     tuigreet = callPackage ../applications/display-managers/greetd/tuigreet.nix { };
     wlgreet = callPackage ../applications/display-managers/greetd/wlgreet.nix { };
-  };
+  } // lib.optionalAttrs config.allowAliases {
+    dlm = throw "greetd.dlm has been removed as it is broken and abandoned upstream"; #Added 2024-07-15
+  });
 
   goldendict = libsForQt5.callPackage ../applications/misc/goldendict { };
   goldendict-ng = qt6Packages.callPackage ../applications/misc/goldendict-ng { };
@@ -16259,10 +16188,6 @@ with pkgs;
 
   whispers = with python3Packages; toPythonApplication whispers;
 
-  warp = callPackage ../applications/networking/warp {
-    inherit (darwin.apple_sdk.frameworks) Security Foundation;
-  };
-
   warp-plus = callPackage ../by-name/wa/warp-plus/package.nix {
     buildGoModule = buildGo122Module;
   };
@@ -16637,12 +16562,6 @@ with pkgs;
   };
 
   ledger-agent = with python3Packages; toPythonApplication ledger-agent;
-
-  litecoin  = libsForQt5.callPackage ../applications/blockchains/litecoin {
-    inherit (darwin.apple_sdk.frameworks) AppKit;
-    boost = pkgs.boost177;
-  };
-  litecoind = litecoin.override { withGui = false; };
 
   monero-cli = callPackage ../applications/blockchains/monero-cli {
     inherit (darwin.apple_sdk.frameworks) CoreData IOKit;
@@ -17346,10 +17265,6 @@ with pkgs;
 
   ue4demos = recurseIntoAttrs (callPackage ../games/ue4demos { });
 
-  ut2004Packages = dontRecurseIntoAttrs (callPackage ../games/ut2004 { });
-
-  ut2004demo = res.ut2004Packages.ut2004 [ res.ut2004Packages.ut2004-demo ];
-
   # To ensure vdrift's code is built on hydra
   vdrift-bin = vdrift.bin;
 
@@ -17438,8 +17353,6 @@ with pkgs;
     name = "prio-wrapped";
     appls = [ prio ];
   };
-
-  cinnamon = recurseIntoAttrs (callPackage ../desktops/cinnamon { });
 
   deepin = recurseIntoAttrs (callPackage ../desktops/deepin { });
 
@@ -18007,8 +17920,6 @@ with pkgs;
     withNgshared = false;
   };
 
-  nvc = darwin.apple_sdk_11_0.callPackage ../applications/science/electronics/nvc { };
-
   openems = callPackage ../applications/science/electronics/openems {
     qcsxcad = libsForQt5.qcsxcad;
   };
@@ -18139,8 +18050,6 @@ with pkgs;
   applgrid = callPackage ../development/libraries/physics/applgrid {
     inherit (darwin.apple_sdk.frameworks) Cocoa;
   };
-
-  geant4 = libsForQt5.callPackage ../development/libraries/physics/geant4 { };
 
   hepmc3 = callPackage ../development/libraries/physics/hepmc3 {
     python = null;
