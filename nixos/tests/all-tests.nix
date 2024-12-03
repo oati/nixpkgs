@@ -286,6 +286,7 @@ in {
   drawterm = discoverTests (import ./drawterm.nix);
   drbd = handleTest ./drbd.nix {};
   druid = handleTestOn [ "x86_64-linux" ] ./druid {};
+  drbd-driver = handleTest ./drbd-driver.nix {};
   dublin-traceroute = handleTest ./dublin-traceroute.nix {};
   earlyoom = handleTestOn ["x86_64-linux"] ./earlyoom.nix {};
   early-mount-options = handleTest ./early-mount-options.nix {};
@@ -619,6 +620,7 @@ in {
   mongodb = handleTest ./mongodb.nix {};
   moodle = handleTest ./moodle.nix {};
   moonraker = handleTest ./moonraker.nix {};
+  mopidy = handleTest ./mopidy.nix {};
   morph-browser = handleTest ./morph-browser.nix { };
   morty = handleTest ./morty.nix {};
   mosquitto = handleTest ./mosquitto.nix {};
@@ -1106,7 +1108,7 @@ in {
   vaultwarden = discoverTests (import ./vaultwarden.nix);
   vector = handleTest ./vector {};
   vengi-tools = handleTest ./vengi-tools.nix {};
-  victoriametrics = handleTest ./victoriametrics.nix {};
+  victoriametrics = handleTest ./victoriametrics {};
   vikunja = handleTest ./vikunja.nix {};
   virtualbox = handleTestOn ["x86_64-linux"] ./virtualbox.nix {};
   vscode-remote-ssh = handleTestOn ["x86_64-linux"] ./vscode-remote-ssh.nix {};
