@@ -379,7 +379,7 @@ let
     postPatch =  lib.optionalString (!isElectron) ''
       ln -s ${./files/gclient_args.gni} build/config/gclient_args.gni
 
-      echo 'LASTCHANGE=${upstream-info.DEPS."src".rev}-refs/heads/master@{#0}' > build/util/LASTCHANGE
+      echo 'LASTCHANGE=${upstream-info.DEPS."src".rev}-refs/tags/${version}@{#0}' > build/util/LASTCHANGE
       echo "$SOURCE_DATE_EPOCH" > build/util/LASTCHANGE.committime
 
       cat << EOF > gpu/config/gpu_lists_version.h
@@ -663,12 +663,7 @@ let
     } // lib.optionalAttrs (!isElectron) {
       inherit chromiumDeps npmDeps;
     };
-  }
-  # overwrite `version` with the exact same `version` from the same source,
-  # except it internally points to `upstream-info.nix` for
-  # `builtins.unsafeGetAttrPos`, which is used by ofborg to decide
-  # which maintainers need to be pinged.
-  // builtins.removeAttrs upstream-info (builtins.filter (e: e != "version") (builtins.attrNames upstream-info));
+  };
 
 # Remove some extraAttrs we supplied to the base attributes already.
 in stdenv.mkDerivation (base // removeAttrs extraAttrs [
