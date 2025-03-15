@@ -1189,7 +1189,9 @@ with pkgs;
 
   datalad-gooey = with python3Packages; toPythonApplication datalad-gooey;
 
-  forgejo-lts = callPackage ../by-name/fo/forgejo/lts.nix { };
+  forgejo-lts = callPackage ../by-name/fo/forgejo/lts.nix {
+    buildGoModule = buildGo123Module;
+  };
 
   gfold = callPackage ../applications/version-management/gfold { };
 
@@ -2918,10 +2920,6 @@ with pkgs;
   };
 
   cmdpack = callPackages ../tools/misc/cmdpack { };
-
-  cobalt = callPackage ../applications/misc/cobalt {
-    inherit (darwin.apple_sdk.frameworks) CoreServices;
-  };
 
   cocoapods = callPackage ../development/tools/cocoapods { };
 
@@ -8777,8 +8775,6 @@ with pkgs;
   gamenetworkingsockets = callPackage ../development/libraries/gamenetworkingsockets {
     protobuf = protobuf_21;
   };
-
-  gcovr = with python3Packages; toPythonApplication gcovr;
 
   gcr = callPackage ../development/libraries/gcr { };
 
@@ -16172,8 +16168,6 @@ with pkgs;
   gshogi = python3Packages.callPackage ../games/gshogi { };
 
   qtads = qt5.callPackage ../games/qtads { };
-
-  hedgewars = libsForQt5.callPackage ../games/hedgewars { };
 
   ibmcloud-cli = callPackage ../tools/admin/ibmcloud-cli { stdenv = stdenvNoCC; };
 
