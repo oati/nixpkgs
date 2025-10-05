@@ -1182,8 +1182,8 @@ let
         mktplcRef = {
           name = "dart-code";
           publisher = "dart-code";
-          version = "3.118.2";
-          hash = "sha256-AHT5QP8aNhuMOyyV7Nig8UnoG4dkQhN2XKw0eh+Rfbg=";
+          version = "3.120.0";
+          hash = "sha256-YXQhdn9bOpVGeG0mKPazMvsZecx4sd1ZpSdHfH3eNOY=";
         };
 
         meta.license = lib.licenses.mit;
@@ -4508,8 +4508,8 @@ let
         mktplcRef = {
           name = "tabnine-vscode";
           publisher = "tabnine";
-          version = "3.315.0";
-          hash = "sha256-y6nTUDMQtJWZA30/jWTu0Kj9EMYkLGUAq7xvBvwGpeY=";
+          version = "3.317.0";
+          hash = "sha256-xXZfuZ9ZqACzoTpRkSAXHczJ06A0CC5WIic/I1uoLuI=";
         };
         meta = {
           license = lib.licenses.mit;
