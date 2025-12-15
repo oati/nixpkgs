@@ -570,6 +570,8 @@ let
 
         extlib-1-7-7 = callPackage ../development/ocaml-modules/extlib/1.7.7.nix { };
 
+        extunix = callPackage ../development/ocaml-modules/extunix/default.nix { };
+
         ezjsonm = callPackage ../development/ocaml-modules/ezjsonm { };
 
         ezjsonm-encoding = callPackage ../development/ocaml-modules/ezjsonm-encoding { };
@@ -1131,6 +1133,8 @@ let
         mariadb = callPackage ../development/ocaml-modules/mariadb {
           inherit (pkgs) mariadb;
         };
+
+        markdown = callPackage ../development/ocaml-modules/markdown { };
 
         markup = callPackage ../development/ocaml-modules/markup { };
 
@@ -1710,6 +1714,10 @@ let
         ppx_deriving_qcheck = callPackage ../development/ocaml-modules/qcheck/ppx_deriving_qcheck.nix { };
 
         ppx_deriving_rpc = callPackage ../development/ocaml-modules/ppx_deriving_rpc { };
+
+        ppx_deriving_variant_string =
+          callPackage ../development/ocaml-modules/ppx_deriving_variant_string
+            { };
 
         ppx_deriving_yaml = callPackage ../development/ocaml-modules/ppx_deriving_yaml {
           mdx = mdx.override { inherit logs; };
